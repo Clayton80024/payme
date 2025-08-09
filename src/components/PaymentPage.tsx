@@ -9,64 +9,21 @@ interface PaymentPageProps {
 const PaymentPage = ({ userProfile, isLoading }: PaymentPageProps) => {
   const [baseAmount, setBaseAmount] = useState(200.00)
   const [baseAmountInput, setBaseAmountInput] = useState('200.00')
-  const [selectedTip, setSelectedTip] = useState(0)
-  const [customTip, setCustomTip] = useState('')
-  const [customTipDisplay, setCustomTipDisplay] = useState('')
+  const [selectedPaymentPlan, setSelectedPaymentPlan] = useState('full')
   
-  const tipPercentages = [10, 15, 20]
-  
-  const calculateTipAmount = (percentage: number) => {
-    return (baseAmount * percentage) / 100
-  }
+  const paymentPlans = [
+    { id: 'full', title: 'Pay in Full', description: 'Pay the full amount now', fee: 0 },
+    { id: 'pay4', title: 'Pay in 4', description: '4 interest-free payments', fee: 0 },
+    { id: 'monthly', title: 'Monthly', description: 'Monthly payment plan', fee: baseAmount * 0.029 }
+  ]
   
   const getTotalAmount = () => {
-    if (customTip) {
-      return baseAmount + parseFloat(customTip)
-    }
-    return baseAmount + calculateTipAmount(selectedTip)
+    const plan = paymentPlans.find(p => p.id === selectedPaymentPlan)
+    return baseAmount + (plan?.fee || 0)
   }
   
-  const handleTipSelect = (percentage: number) => {
-    if (selectedTip === percentage) {
-      setSelectedTip(0)
-    } else {
-      setSelectedTip(percentage)
-    }
-    setCustomTip('')
-    setCustomTipDisplay('')
-  }
-  
-  const handleCustomTipChange = (value: string) => {
-    const numericValue = value.replace(/[^0-9.]/g, '')
-    
-    if (numericValue === '' || /^\d*\.?\d{0,2}$/.test(numericValue)) {
-      setCustomTipDisplay(numericValue ? `$${numericValue}` : '')
-      
-      const parsedValue = parseFloat(numericValue)
-      if (!isNaN(parsedValue) && parsedValue >= 1) {
-        setCustomTip(numericValue)
-        setSelectedTip(0)
-      } else if (numericValue === '') {
-        setCustomTip('')
-        setSelectedTip(0)
-      }
-    }
-  }
-  
-  const handleCustomTipBlur = () => {
-    if (customTip) {
-      const parsedValue = parseFloat(customTip)
-      if (parsedValue < 1) {
-        setCustomTip('1.00')
-        setCustomTipDisplay('$1.00')
-      } else {
-        const formatted = parsedValue.toFixed(2)
-        setCustomTip(formatted)
-        setCustomTipDisplay(`$${formatted}`)
-      }
-    } else {
-      setCustomTipDisplay('')
-    }
+  const handlePaymentPlanSelect = (planId: string) => {
+    setSelectedPaymentPlan(planId)
   }
   
   const handleBaseAmountChange = (value: string) => {
@@ -263,53 +220,60 @@ const PaymentPage = ({ userProfile, isLoading }: PaymentPageProps) => {
             </div>
           </div>
           
-          {/* Tip Selection */}
+          {/* Payment Plan Selection */}
           <div className="mb-4 sm:mb-6">
             <h3 className="text-lg sm:text-xl font-bold text-gray-dark mb-3 sm:mb-4 text-center">
-              Add a tip
+              Choose payment plan
             </h3>
             
-            {/* Tip Percentage Buttons */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
-              {tipPercentages.map((percentage) => (
-                <button
-                  key={percentage}
-                  onClick={() => handleTipSelect(percentage)}
-                  disabled={customTip !== ''}
-                  className={`py-3 sm:py-4 px-2 sm:px-3 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-lg transition-all duration-300 ${
-                    customTip !== ''
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-100 shadow-sm'
-                      : selectedTip === percentage
-                      ? 'bg-primary text-white shadow-xl shadow-primary/30 transform scale-105 border-2 border-primary-dark'
-                      : 'bg-white text-gray-dark hover:bg-gray-50 border-2 border-gray-300 shadow-lg hover:shadow-xl hover:border-gray-400 hover:scale-[1.02]'
-                  }`}
-                >
-                  {percentage}%
-                  <div className={`text-xs sm:text-sm font-medium mt-1 ${
-                    customTip !== ''
-                      ? 'text-gray-400'
-                      : selectedTip === percentage ? 'text-white' : 'text-gray-medium'
-                  }`}>
-                    ${calculateTipAmount(percentage).toFixed(2)}
-                  </div>
-                </button>
-              ))}
-            </div>
-            
-            {/* Custom Tip Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-dark mb-2">
-                Custom tip amount
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={customTipDisplay}
-                  onChange={(e) => handleCustomTipChange(e.target.value)}
-                  onBlur={handleCustomTipBlur}
-                  placeholder="$1.00"
-                  className="w-full pl-4 pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary focus:border-primary text-base sm:text-lg font-medium bg-white shadow-sm transition-all duration-200"
-                />
+            {/* Payment Plan Cards - Horizontal Scrolling */}
+            <div className="overflow-x-auto scrollbar-hide px-1">
+              <div className="flex gap-3 sm:gap-4 pb-2 pt-1" style={{ width: 'max-content' }}>
+                {paymentPlans.map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => handlePaymentPlanSelect(plan.id)}
+                    className={`flex-shrink-0 w-44 sm:w-48 rounded-xl border-2 transition-all duration-300 ${
+                      selectedPaymentPlan === plan.id
+                        ? 'bg-white text-gray-dark shadow-lg shadow-primary/20 transform scale-105 border-primary'
+                        : 'bg-white text-gray-dark hover:bg-gray-50 border-gray-300 shadow-md hover:shadow-lg hover:border-gray-400 hover:scale-[1.02]'
+                    }`}
+                  >
+                    <div className="text-left relative p-4 sm:p-5">
+                      {/* Toggle Indicator */}
+                      <div className="absolute top-4 sm:top-5 right-4 sm:right-5">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                          selectedPaymentPlan === plan.id
+                            ? 'border-primary bg-primary'
+                            : 'border-gray-300 bg-white'
+                        }`}>
+                          {selectedPaymentPlan === plan.id && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <h4 className="font-bold text-sm sm:text-base mb-2 sm:mb-3 text-gray-dark pr-7">
+                        {plan.title}
+                      </h4>
+                      <p className="text-xs sm:text-sm mb-3 sm:mb-4 text-gray-medium leading-relaxed">
+                        {plan.description}
+                      </p>
+                      <div className="text-xs sm:text-sm font-bold text-gray-dark mb-2">
+                        {plan.id === 'full' && `$${baseAmount.toFixed(2)}`}
+                        {plan.id === 'pay4' && `$${(baseAmount / 4).toFixed(2)} x 4`}
+                        {plan.id === 'monthly' && `$${((baseAmount + plan.fee) / 12).toFixed(2)}/mo`}
+                      </div>
+                      {plan.fee > 0 && (
+                        <div className="text-xs mt-1 sm:mt-2 text-gray-medium">
+                          Fee: ${plan.fee.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -317,19 +281,28 @@ const PaymentPage = ({ userProfile, isLoading }: PaymentPageProps) => {
           {/* Total Amount */}
           <div className="bg-gradient-to-r from-gray-light to-gray-50 rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 border border-gray-200">
             <div className="flex justify-between items-center py-1">
-              <span className="text-gray-medium font-medium text-sm sm:text-base">Subtotal:</span>
+              <span className="text-gray-medium font-medium text-sm sm:text-base">Amount:</span>
               <span className="font-semibold text-gray-dark text-sm sm:text-base">${baseAmount.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between items-center py-1">
-              <span className="text-gray-medium font-medium text-sm sm:text-base">Tip:</span>
-              <span className="font-semibold text-gray-dark text-sm sm:text-base">
-                ${customTip ? parseFloat(customTip).toFixed(2) : calculateTipAmount(selectedTip).toFixed(2)}
-              </span>
-            </div>
+            {paymentPlans.find(p => p.id === selectedPaymentPlan)?.fee ? (
+              <div className="flex justify-between items-center py-1">
+                <span className="text-gray-medium font-medium text-sm sm:text-base">Processing fee:</span>
+                <span className="font-semibold text-gray-dark text-sm sm:text-base">
+                  ${(paymentPlans.find(p => p.id === selectedPaymentPlan)?.fee || 0).toFixed(2)}
+                </span>
+              </div>
+            ) : null}
             <hr className="my-3 border-gray-300" />
             <div className="flex justify-between items-center text-lg sm:text-xl font-bold">
-              <span className="text-gray-dark">Total:</span>
-              <span className="text-primary">${getTotalAmount().toFixed(2)}</span>
+              <span className="text-gray-dark">
+                {selectedPaymentPlan === 'pay4' ? 'First payment:' : 
+                 selectedPaymentPlan === 'monthly' ? 'Monthly payment:' : 'Total:'}
+              </span>
+              <span className="text-primary">
+                {selectedPaymentPlan === 'pay4' ? `$${(baseAmount / 4).toFixed(2)}` :
+                 selectedPaymentPlan === 'monthly' ? `$${(getTotalAmount() / 12).toFixed(2)}` :
+                 `$${getTotalAmount().toFixed(2)}`}
+              </span>
             </div>
           </div>
           
@@ -343,12 +316,16 @@ const PaymentPage = ({ userProfile, isLoading }: PaymentPageProps) => {
                 : 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-200 shadow-sm'
             }`}
           >
-            {isValidPayment() ? (
+{isValidPayment() ? (
               <div className="flex items-center justify-center gap-2">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
-                Pay ${getTotalAmount().toFixed(2)}
+                {selectedPaymentPlan === 'pay4' 
+                  ? `Pay First ${(baseAmount / 4).toFixed(2)}` 
+                  : selectedPaymentPlan === 'monthly' 
+                  ? `Start Monthly Plan`
+                  : `Pay ${getTotalAmount().toFixed(2)}`}
               </div>
             ) : (
               'Enter minimum $1.00'
