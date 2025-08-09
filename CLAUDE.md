@@ -9,3 +9,5 @@
 ## Flow Design Prompts
 - Generate a step-by-step user flow diagram for a service provider sending a payment link via SMS to a client who completes payment in under 10 seconds.
 - Always use this web site as design colors https://www.expensify.com/
+
+- This will be the integration with PayPal Buy Now Pay Later using web site docs https://developer.paypal.com/studio/checkout/pay-later/us/integrate
